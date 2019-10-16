@@ -1,0 +1,44 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: app-ms-card
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  minReadySeconds: 5 
+  template:
+    metadata:
+      labels:
+        app: app-ms-card
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: app-ms-card
+        image: harmonysbx.azurecr.io/harmonysbx:1.225
+        ports:
+        - containerPort: 443
+        resources:
+          requests:
+            cpu: 250m
+          limits:
+            cpu: 500m
+      imagePullSecrets:
+        - name: leapwba
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-ms-card
+  annotations: 
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    service.beta.kubernetes.io/azure-load-balancer-internal-subnet: "api-ingress-subnet"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 443
+  selector:
+    app: app-ms-card
